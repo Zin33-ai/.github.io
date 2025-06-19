@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>社會住宅包租代管拍照命名工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 450px;
+            margin: 0 auto;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 22px;
+        }
+        
+        .form-group {
+            margin-bottom: 18px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+            font-size: 14px;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        select:focus, input:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+        
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .category-btn {
+            padding: 12px 8px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+            font-size: 12px;
+            line-height: 1.2;
+        }
+        
+        .category-btn:hover {
+            background: #f0f0f0;
+            transform: translateY(-1px);
+        }
+        
+        .category-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .subcategory {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+        
+        .subcategory.show {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .generate-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .generate-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f4f8;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .result h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 16px;
+        }
+        
+        .filename {
+            font-family: monospace;
+            background: #fff;
+            padding: 12px;
+            border-radius: 5px;
+            word-break: break-all;
+            border: 1px solid #ddd;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        
+        .copy-btn {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .info-note {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏠 社會住宅拍照命名工具</h1>
+        
+        <div class="form-group">
+            <label>物件地址：</label>
+            <input type="text" id="address" placeholder="例：台北市大安區XX路123號">
+        </div>
+        
+        <div class="form-group">
+            <label>選擇主要類別：</label>
+            <div class="category-grid">
+                <div class="category-btn" onclick="selectCategory('entrance', this)">
+                    🚪 大門/門牌照片
+                </div>
+                <div class="category-btn" onclick="selectCategory('passage', this)">
+                    🚶 出入口通道樓梯
+                </div>
+                <div class="category-btn" onclick="selectCategory('safety', this)">
+                    🚨 安全設備
+                </div>
+                <div class="category-btn" onclick="selectCategory('bathroom', this)">
+                    🚿 衛浴設備
+                </div>
+                <div class="category-btn" onclick="selectCategory('indoor', this)">
+                    🏠 室內設備
+                </div>
+                <div class="category-btn" onclick="selectCategory('maintenance', this)">
+                    🔧 維修相關
+                </div>
+                <div class="category-btn" onclick="selectCategory('landlord', this)">
+                    👤 房東資料
+                </div>
+                <div class="category-btn" onclick="selectCategory('tenant', this)">
+                    📋 房客資料
+                </div>
+            </div>
+        </div>
+        
+        <!-- 大門/門牌照片 -->
+        <div id="entrance" class="subcategory">
+            <label>大門/門牌類型：</label>
+            <select id="entranceType">
+                <option value="">請選擇</option>
+                <option value="大門_透天外觀">大門(透天外觀)</option>
+                <option value="大門_大樓外觀">大門(大樓外觀)</option>
+                <option value="門牌">門牌</option>
+                <option value="信箱">信箱</option>
+                <option value="其他_大門">其他</option>
+            </select>
+        </div>
+        
+        <!-- 出入口、走廊、通道或樓梯間 -->
+        <div id="passage" class="subcategory">
+            <div class="info-note">
+                ⚠️ 樓梯間：透天不需要拍攝（台北除外）
+            </div>
+            <label>通道樓梯類型：</label>
+            <select id="passageType">
+                <option value="">請選擇</option>
+                <option value="出入口通道_由內而外">由內而外</option>
+                <option value="出入口通道_由外而內">由外而內</option>
+                <option value="樓梯間_整體">樓梯間</option>
+                <option value="走廊通道_無堆放雜物">走廊通道_無堆放雜物</option>
+            </select>
+        </div>
+        
+        <!-- 安全設備 -->
+        <div id="safety" class="subcategory">
+            <label>安全設備類型：</label>
+            <select id="safetyType">
+                <option value="">請選擇</option>
+                <option value="滅火器_遠照">滅火器遠照</option>
+                <option value="滅火器_近照">滅火器近照</option>
+                <option value="滅火器_標章">滅火器標章(台中/高雄)</option>
+                <option value="偵煙器_遠照">偵煙器遠照</option>
+                <option value="偵煙器_近照">偵煙器近照</option>
+                <option value="其他_安全設備">其他安全設備</option>
+            </select>
+        </div>
+        
+        <!-- 衛浴設備 -->
+        <div id="bathroom" class="subcategory">
+            <div class="info-note">
+                💡 請放同一間衛浴的照片(全景與淋浴設備的清晰照)
+            </div>
+            <label>衛浴設備類型：</label>
+            <select id="bathroomType">
+                <option value="">請選擇</option>
+                <option value="衛浴設備1_全景">衛浴設備1(全景)</option>
+                <option value="衛浴設備2_淋浴設備">衛浴設備2(淋浴設備)</option>
+                <option value="衛浴設備3_馬桶洗臉盆">衛浴設備3(馬桶洗臉盆)</option>
+                <option value="熱水器_近照">熱水器近照</option>
+                <option value="熱水器_通風照">熱水器通風照</option>
+                <option value="電熱器_型號">電熱器型號</option>
+            </select>
+        </div>
+        
+        <!-- 室內設備 -->
+        <div id="indoor" class="subcategory">
+            <div class="info-note">
+                💰 請選擇對租金有影響之設備
+            </div>
+            <label>室內設備類型：</label>
+            <select id="indoorType">
+                <option value="">請選擇</option>
+                <option value="室內設備1">室內設備1</option>
+                <option value="室內設備2">室內設備2</option>
+                <option value="室內設備3">室內設備3</option>
+            </select>
+        </div>
+        
+        <!-- 維修相關 -->
+        <div id="maintenance" class="subcategory">
+            <label>維修問題類型：</label>
+            <select id="maintenanceType">
+                <option value="">請選擇</option>
+                <option value="漏水照_概況">漏水照</option>
+                <option value="漏水處1">漏水處1</option>
+                <option value="漏水處2">漏水處2</option>
+            </select>
+        </div>
+        
+        <!-- 房東資料 -->
+        <div id="landlord" class="subcategory">
+            <label>房東資料類型：</label>
+            <select id="landlordType">
+                <option value="">請選擇</option>
+                <option value="房東_身分證正面">身分證（正面）</option>
+                <option value="房東_身分證反面">身分證（反面）</option>
+                <option value="房東_存摺照">存摺照</option>
+                <option value="房東_房屋稅單">房屋稅單</option>
+            </select>
+        </div>
+        
+        <!-- 房客資料 -->
+        <div id="tenant" class="subcategory">
+            <label>房客資料類型：</label>
+            <select id="tenantType">
+                <option value="">請選擇</option>
+                <option value="房客_身分證正面">身分證（正面）</option>
+                <option value="房客_身分證反面">身分證（反面）</option>
+                <option value="房客_存摺照">存摺照</option>
+                <option value="房客_戶籍謄本">戶籍謄本(一個月內且完整記事)</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>補充說明（選填）：</label>
+            <input type="text" id="note" placeholder="例：1樓、主臥室、編號001">
+        </div>
+        
+        <button class="generate-btn" onclick="generateFilename()">
+            📸 生成檔案名稱
+        </button>
+        
+        <div id="result" class="result" style="display: none;">
+            <h3>建議檔案名稱：</h3>
+            <div id="filename" class="filename"></div>
+            <button class="copy-btn" onclick="copyToClipboard()">複製檔案名</button>
+        </div>
+    </div>
+
+    <script>
+        let currentCategory = '';
+        
+        function selectCategory(category, element) {
+            // Reset all buttons
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Hide all subcategories
+            document.querySelectorAll('.subcategory').forEach(sub => {
+                sub.classList.remove('show');
+            });
+            
+            // Activate selected button and show subcategory
+            element.classList.add('active');
+            document.getElementById(category).classList.add('show');
+            currentCategory = category;
+        }
+        
+        function generateFilename() {
+            const address = document.getElementById('address').value.trim();
+            const note = document.getElementById('note').value.trim();
+            
+            if (!address) {
+                alert('請輸入物件地址');
+                return;
+            }
+            
+            if (!currentCategory) {
+                alert('請選擇主要類別');
+                return;
+            }
+            
+            // Get selected type
+            let type = '';
+            const typeSelect = document.getElementById(currentCategory + 'Type');
+            if (typeSelect && typeSelect.value) {
+                type = typeSelect.value;
+            } else {
+                alert('請選擇具體類型');
+                return;
+            }
+            
+            // Generate filename
+            const now = new Date();
+            const date = now.toISOString().split('T')[0].replace(/-/g, '');
+            const time = now.toTimeString().split(' ')[0].replace(/:/g, '').substring(0, 4); // HHMM
+            
+            // Clean address for filename
+            const addressShort = address.replace(/[^\w\u4e00-\u9fa5]/g, '').substring(0, 15);
+            
+            let filename = `${date}_${time}_${type}_${addressShort}`;
+            
+            if (note) {
+                const noteClean = note.replace(/[^\w\u4e00-\u9fa5]/g, '');
+                filename += `_${noteClean}`;
+            }
+            
+            filename += '.jpg';
+            
+            // Show result
+            document.getElementById('filename').textContent = filename;
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function copyToClipboard() {
+            const filename = document.getElementById('filename').textContent;
+            navigator.clipboard.writeText(filename).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✓ 已複製！';
+                btn.style.background = '#218838';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '#28a745';
+                }, 2000);
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = filename;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✓ 已複製！';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
